@@ -14,7 +14,7 @@ def create_parser():
     parser.add_argument('--is_balanced', default=True)
     
     # Data
-    parser.add_argument('--SC_Type', default="RE", choices=["RE", "TD", "IOU"])
+    parser.add_argument('--SC_Type', default="RE", choices=["RE", "TD", "IOU", "SU"])
     parser.add_argument('--num_classes', type=int, default="2", help='number of class')
     parser.add_argument('--max_setence_length', type=int, default="2000", help='Max length of a setence')
     parser.add_argument('--training_data_ratio', default=0.80, type=float)
@@ -32,6 +32,7 @@ def create_parser():
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate')
 
     # Log and save
+    parser.add_argument('--model_dir', default='./Features', type=str, metavar='DIR')
     parser.add_argument('--log_dir', default='./Logs', type=str, metavar='DIR')
     parser.add_argument('--save-dir', default='./checkpoints', type=str, metavar='DIR')
 

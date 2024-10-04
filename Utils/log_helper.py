@@ -13,7 +13,11 @@ def get_log_path(args):
     # 获取当前时间作为日志文件名称
     current_time=time.strftime('%Y%m%d%H%M',time.localtime(time.time() )) 
     
-    log_txt_name = args.model + "_" + args.SC_Type + "_" + current_time +".txt"
+    if args.mislabel_rate > 0:
+        mislable_rate = 100 * args.mislabel_rate
+        log_txt_name = args.model + "_noise_" + str(mislable_rate) + "_" + args.SC_Type + "_" + current_time + ".txt"
+    else:
+        log_txt_name = args.model + "_" + args.SC_Type + "_" + current_time + ".txt"
     log_txt_path = os.path.join(new_log_dir, log_txt_name)
     return log_txt_path, log_txt_name
 
