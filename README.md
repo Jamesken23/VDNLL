@@ -18,11 +18,12 @@ VDNLL is more robust against noisy labels, and can effectively maintain the perf
 
 <table>
     <tr>
-        <td ><center><img src="Datasets/Figs/GraBit_RE_clean_III.pdf" >图1 范冰冰 </center></td>
-        <td ><center><img src="Datasets/Figs/GraBit_RE_clean_III.pdf" >图2 范冰冰</center></td>
+        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_clean_II.jpg" >图1 范冰冰 </center></td>
+        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_noise_36_II.jpg" >图2 范冰冰</center></td>
+        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_clean_II.jpg" >图3 范冰冰 </center></td>
     </tr>
 </table>
 
-In Fig. 6, we present the feature representations learned by the GraBit, ConvMHSA, and VDNLL, in the clean and noisy label settings. Compared to existing popular vulnerability detection methods, the feature representations learned by the VDNLL are always more class-discriminative. This proves that our approach can indeed learn robust code feature representations from noisy labels.
+In the above figure, we present the feature representations learned by the GraBit, ConvMHSA, and VDNLL, in the clean and noisy label settings. Compared to existing popular vulnerability detection methods, the feature representations learned by the VDNLL are always more class-discriminative. This proves that our approach can indeed learn robust code feature representations from noisy labels.
 
 We will continue to add and update more details on this work.
