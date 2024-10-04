@@ -31,12 +31,6 @@ class LSTM(nn.Module):
         self.lstm = nn.LSTM(input_size=embedding_dim, hidden_size=self.n_hidden, num_layers=hidden_layers, dropout=dropout, batch_first=True,
                             bidirectional=bid)
 
-        # projection head
-        self.g = nn.Sequential(
-            nn.Linear(self.n_hidden * hidden_layers * (1 + bid), self.n_hidden, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Linear(self.n_hidden, int(self.n_hidden / 2), bias=True)
-        )
 
         # classifier head
         self.fc = nn.Linear(self.n_hidden * hidden_layers * (1 + bid), num_classes)
@@ -56,16 +50,5 @@ class LSTM(nn.Module):
         _, (x, _) = self.lstm(x)
         
         feature = torch.cat([x[i, :, :] for i in range(x.shape[0])], dim=1)
-        projection = self.g(feature)
-
-        if forward_fc:
-            logits = self.fc(feature)
-            if ignore_feat == True:
-                return projection, logits
-            else:
-                return feature, projection, logits
-        else:
-            if ignore_feat == True:
-                return projection
-            else:
-                return feature, projection
+        
+        return feature, self.fc(feature)

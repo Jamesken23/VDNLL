@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,49 +6,73 @@ import copy
 import torch.optim as optim
 
 """
-Transformer网络
+TextCNN+Transformer网络
+参考：
+https://github.com/649453932/Chinese-Text-Classification-Pytorch/blob/master/models/Transformer.py
+https://github.com/CLOVEXCWZ/Pytorch_LongText_Classification_Demo/blob/master/models/transformer.py
+https://github.com/Lizhen0628/text_classification/blob/master/model/models.py
 """
 
-class Transformer(nn.Module):
-    def __init__(self, vocab_size, seq_len, device, n_class=2,
-                 embed_dim=300, dim_model=300, dropout=0.5, num_head=5,
-                 hidden=1024, num_encoder=2, lr=0.001):
+class Transformer_Conv(nn.Module):
+    def __init__(self, vocab_size, seq_len,
+                 n_class=2,
+                 embed_dim=300,  # embedding的维度
+                 dim_model=300,
+                 dropout=0.5,
+                 num_head=5,
+                 hidden=1024,
+                 num_encoder=2, device=None):
+        super().__init__()
 
-        super(Transformer, self).__init__()
-        self.device = device
-        
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
+        # -----------------------TextCNN---------------------------
+        self.n_filters = 200
         
-        self.postion_embedding = Positional_Encoding(embed_dim, seq_len, dropout, self.device)
-        self.encoder = Encoder(dim_model, num_head, hidden, dropout)
+        self.conv = nn.Conv1d(in_channels=seq_len, out_channels=self.n_filters, kernel_size=5, padding=2)
+
+        # -----------------------TextCNN---------------------------
+        self.num_head = num_head
+        
+        self.postion_embedding = Positional_Encoding(self.n_filters, embed_dim, dropout, device)
+        self.encoder = Encoder(self.n_filters, num_head, hidden, dropout)
         self.encoders = nn.ModuleList([
             copy.deepcopy(self.encoder)
             for _ in range(num_encoder)])
         
-        self.fc1 = nn.Linear(dim_model*seq_len, dim_model)
-        self.fc2 = nn.Linear(dim_model, n_class)
+        self.fc1 = nn.Linear(self.n_filters*embed_dim, self.n_filters)
+        self.fc2 = nn.Linear(self.n_filters, n_class)
         self.dropout = nn.Dropout(dropout)
         
-        self.optimizer = optim.AdamW(self.parameters(), lr)
+        self.optimizer = optim.Adam(self.parameters(), 0.01)
         # nn.CrossEntropyLoss会自动加上Sofrmax层
         self.criterion = nn.CrossEntropyLoss()
+        
 
-    def forward(self, x):
-        out = self.embedding(x)
+    def forward(self, text):
+        # text = [batch size, sent len]
+        embedded = self.embedding(text)
+        # embedded = [batch size, sent len, emb dim]
+        # embedded = embedded.permute(0, 2, 1).float()
+        # embedded = [batch size, emb dim, sent len]
 
-        out = self.postion_embedding(out)
+        conved = F.relu(self.conv(embedded)) # conved_n = [batch size, n_filters, sent len - filter_sizes[n] + 1]
+        # conved = F.max_pool1d(conved, int(conved.shape[2]))
+        pooled = self.dropout(conved) # pooled_n = [batch size, n_filters]
+
+        # cat = self.dropout(torch.cat(pooled, dim=1)) # cat = [batch size, n_filters * len(filter_sizes)]
+#         print("pooled shape is {0}".format(pooled.shape))
+        out = pooled.reshape(-1, pooled.shape[2], pooled.shape[1]) # [batch size, n_filters, filter_sizes]
+                
+        out = self.postion_embedding(out) # [batch size, n_filters, filter_sizes]
 
         for encoder in self.encoders:
-            out = encoder(out)
+            out = encoder(out) # [batch size, n_filters, filter_sizes]
 
-        out = out.view(out.size(0), -1)
-        # print("out shape is {0}".format(out.shape))
+        out = out.view(out.size(0), -1) # [batch size, n_filters * filter_sizes]
         # out = torch.mean(out, 1)
-    
-        x_1 = self.fc1(out)
-        x_2 = self.fc2(self.dropout(x_1))
-#         print("x_2 shape is {0}".format(x_2.shape))
-        return x_1, x_2
+        out = self.dropout(self.fc1(out))
+        
+        return self.fc2(out)
 
 
 class Encoder(nn.Module):
@@ -70,9 +92,6 @@ class Positional_Encoding(nn.Module):
         super(Positional_Encoding, self).__init__()
         self.device = device
         self.pe = torch.tensor([[pos / (10000.0 ** (i // 2 * 2.0 / embed)) for i in range(embed)] for pos in range(pad_size)])
-        # self.pe = self.pe.to(self.device)
-        if torch.cuda.is_available():
-            self.pe = self.pe.cpu()
         self.pe[:, 0::2] = np.sin(self.pe[:, 0::2])
         self.pe[:, 1::2] = np.cos(self.pe[:, 1::2])
         self.dropout = nn.Dropout(dropout)
