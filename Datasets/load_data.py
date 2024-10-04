@@ -20,8 +20,13 @@ def get_data_path_vocab(sc_type):
     elif sc_type == "IOU":
         train_data_path = "Datasets/IOU/training_data.json"
         valid_data_path = "Datasets/IOU/valid_data.json"
-        test_data_path = "Datasets/TD/test_data.json"
+        test_data_path = "Datasets/IOU/test_data.json"
         vocab2id_path = "Datasets/IOU/IOU_vocab_id.pkl"
+    elif sc_type == "SU":
+        train_data_path = "Datasets/SU/training_data.json"
+        valid_data_path = "Datasets/SU/valid_data.json"
+        test_data_path = "Datasets/SU/test_data.json"
+        vocab2id_path = "Datasets/SU/SU_vocab_id.pkl"
     return train_data_path, valid_data_path, test_data_path, vocab2id_path
 
 

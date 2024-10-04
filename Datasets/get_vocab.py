@@ -49,7 +49,7 @@ def word_process(sc_data_path, sc_type):
 
 
 if __name__ == "__main__":
-    sc_data_path = r"IOU/all_sol.json"
-    sc_type = "IOU"
+    sc_data_path = r"DE/all_sol.json"
+    sc_type = "DE"
 
     word_process(sc_data_path, sc_type)

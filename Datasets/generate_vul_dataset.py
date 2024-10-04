@@ -9,6 +9,9 @@ import numpy as np
 def load_vul_dataset(original_vul_sol_path, new_vul_sol_path):
 
     for i in os.listdir(original_vul_sol_path):
+        if ".sol" not in i:
+            continue
+
         sol_file_path = os.path.join(original_vul_sol_path, i)
         # 创建空列表
         text = ""
@@ -24,10 +27,10 @@ def load_vul_dataset(original_vul_sol_path, new_vul_sol_path):
                 text += line.strip() + " "
         # print("sol_file_path is {0}".format(text))
         idx_label = i.split(".")[0]
-        sol_idx, sol_label = idx_label.split("_")[0], int(idx_label.split("_")[1])
+        sol_label = int(idx_label.split("_")[-1])
 
         one_sol_dict = {}
-        one_sol_dict["sol name"] = str(sol_idx) + ".sol"
+        one_sol_dict["sol name"] = i
         one_sol_dict["label"] = sol_label
         one_sol_dict["sol content"] = text
 
@@ -100,14 +103,14 @@ def split_all_sol(new_vul_sol_path, train_path, valid_path, test_path, training_
 
 
 if __name__ == "__main__":
-    original_vul_sol_path = r"original_sol/IOU_Sol_(631_0_590_1_41)"
-    new_vul_sol_path = r"IOU/all_sol.json"
+    original_vul_sol_path = r"original_sol/DE_414_0_278_1_136"
+    new_vul_sol_path = r"DE/all_sol.json"
     load_vul_dataset(original_vul_sol_path, new_vul_sol_path)
 
     # 训练集、验证机、测试集的比例分别为8：1：1
     training_data_ratio, valid_data_ratio, test_data_ratio = 0.8, 0.1, 0.1
-    train_path = r"IOU/training_data.json"
-    valid_path = r"IOU/valid_data.json"
-    test_path = r"IOU/test_data.json"
+    train_path = r"DE/training_data.json"
+    valid_path = r"DE/valid_data.json"
+    test_path = r"DE/test_data.json"
     split_all_sol(new_vul_sol_path, train_path, valid_path, test_path, training_data_ratio, valid_data_ratio,
                   num_classes=2)
