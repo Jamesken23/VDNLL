@@ -18,14 +18,14 @@ VDNLL is more robust against noisy labels, and can effectively maintain the perf
 
 <table>
     <tr>
-        <td ><center><img src="Datasets/Figs/GraBit_RE_clean_III.jpg" width="350" height="250"> GraBit (clean) </center></td>
-        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_clean_II.jpg" width="350" height="250"> ConvMHSA (clean) </center></td>
-        <td ><center><img src="Datasets/Figs/VDNLL_RE_clean_II.jpg" width="350" height="250"> VDNLL(clean) </center></td>
+        <td ><center><img src="Datasets/Figs/GraBit_RE_clean_III.jpg" width="350" height="200"> GraBit (clean) </center></td>
+        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_clean_II.jpg" width="350" height="200"> ConvMHSA (clean) </center></td>
+        <td ><center><img src="Datasets/Figs/VDNLL_RE_clean_II.jpg" width="350" height="200"> VDNLL(clean) </center></td>
     </tr>
     <tr>
-        <td ><center><img src="Datasets/Figs/GraBit_RE_noise_36_II.jpg" width="350" height="250"> GraBit (noise) </center></td>
-        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_noise_36_II.jpg" width="350" height="250"> ConvMHSA (noise) </center></td>
-        <td ><center><img src="Datasets/Figs/VDNLL_RE_noise_36_II.jpg" width="350" height="250"> VDNLL(noise) </center></td>
+        <td ><center><img src="Datasets/Figs/GraBit_RE_noise_36_II.jpg" width="350" height="200"> GraBit (noise) </center></td>
+        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_noise_36_II.jpg" width="350" height="200"> ConvMHSA (noise) </center></td>
+        <td ><center><img src="Datasets/Figs/VDNLL_RE_noise_36_II.jpg" width="350" height="200"> VDNLL(noise) </center></td>
     </tr>
 </table>
 
