@@ -18,9 +18,14 @@ VDNLL is more robust against noisy labels, and can effectively maintain the perf
 
 <table>
     <tr>
-        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_clean_II.jpg" >图1 范冰冰 </center></td>
-        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_noise_36_II.jpg" >图2 范冰冰</center></td>
-        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_clean_II.jpg" >图3 范冰冰 </center></td>
+        <td ><center><img src="Datasets/Figs/GraBit_RE_clean_III.jpg" > GraBit (clean) </center></td>
+        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_clean_II.jpg" > ConvMHSA (clean) </center></td>
+        <td ><center><img src="Datasets/Figs/VDNLL_RE_clean_II.jpg" > VDNLL(clean) </center></td>
+    </tr>
+    <tr>
+        <td ><center><img src="Datasets/Figs/GraBit_RE_noise_36_II.jpg" > GraBit (noise) </center></td>
+        <td ><center><img src="Datasets/Figs/ConvMHSA_RE_noise_36_II.jpg" > ConvMHSA (noise) </center></td>
+        <td ><center><img src="Datasets/Figs/VDNLL_RE_noise_36_II.jpg" > VDNLL(noise) </center></td>
     </tr>
 </table>
 
