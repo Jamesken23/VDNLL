@@ -8,7 +8,7 @@ from Utils.log_helper import get_logger, get_log_path
 from Utils.data_utils import DataSetWarpper
 from Datasets.load_data import load_train_valid_test_data, get_training_data_with_noisy_labels, get_data_path_vocab
 from Utils.config import create_parser
-from Networks import lstm, transformer
+from Networks import lstm, transformer, bilstm_att, self_attention, textcnn, bilstm, gru, transformer_conv
 from Arch_CV.Colearning_Loader import create_all_loader
 
 
@@ -32,8 +32,26 @@ def create_model(args):
 
     if model_name == "LSTM":
         model = lstm.LSTM(vocab_size=vocab_size, embedding_dim=embedding_dim, num_classes=num_classes, bid=False)
+    elif model_name == "GRU":
+        model = gru.GRU(vocab_size=vocab_size, embedding_dim=embedding_dim)
+    elif model_name == "BiLSTM":
+        model = bilstm.BiLSTM(vocab_size=vocab_size, embedding_dim=embedding_dim)
+    elif model_name == "BiLSTM_Att":
+        model = bilstm_att.BiLSTM_Attention(vocab_size=vocab_size, embedding_dim=embedding_dim, device=device)
+    elif model_name == "TextCNN":
+        num_filter = 100  # 卷积核个数
+        filter_size = [2, 3, 4]  # 卷积核的长，取了三种
+        model = textcnn.TextCNN(vocab_size=vocab_size, embedding_dim=embedding_dim, num_filter=num_filter, filter_sizes=filter_size)
+    elif model_name == "Self_Att":
+        args.batch_size = 8
+        args.max_setence_length = 1000
+        model = self_attention.SelfAttention(vocab_size=vocab_size, embedding_dim=embedding_dim)
     elif model_name == "Transformer":
-        model = transformer.Transformer(vocab_size, max_setence_length, device)
+        args.batch_size = 4
+        args.max_setence_length = 500
+        model = transformer.Transformer(vocab_size, args.max_setence_length, device)
+    elif model_name == "Transformer_conv":
+        model = transformer_conv.Transformer_Conv(vocab_size, max_setence_length, embed_dim=embedding_dim, device=device)
     else:
         print("We do not set this model!")
         exit()
