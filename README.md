@@ -8,8 +8,10 @@ Further instructions on the datasets can be found on [Qian-TD-OF-Datasets](https
 
 # Required Packages
 > - Python 3.8
-> - numpy 1.19.5
-> - scikit-learn 1.3.0
+> - torch 1.7.1
+> - faiss 1.7.1
+> - numpy 1.24.3
+> - scikit-learn 1.3.2
 
 # Tools
 VDNLL is more robust against noisy labels, and can effectively maintain the performance of vulnerability detection in all noisy label settings. To support this, the t-distributed stochastic neighbor embedding (TNSE) [Maaten et al., 2008](https://jmlr.org/papers/v9/vandermaaten08a.html) is applied to visualize the feature representations of the RE dataset. In Fig. 6, we present the feature representations learned by the GraBit, ConvMHSA, and VDNLL, in the clean and noisy label settings. Compared to existing popular vulnerability detection methods, the feature representations learned by the VDNLL are always more class-discriminative. This proves that our approach can indeed learn robust code feature representations from noisy labels.
