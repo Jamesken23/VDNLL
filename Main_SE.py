@@ -127,11 +127,10 @@ def create_loader(args, log_set, is_symmetric=False):
 
 if __name__ == '__main__':
     # RE vocab -> 72800; TD vocab -> 37369/65908; IOU vocab -> 45475; SU -> 56534
-    args.model, args.arch, args.SC_Type, args.vocab_size = "TextCNN", "VDNLL", "SU", 57000
-#     args.model, args.arch, args.SC_Type = "LSTM", "VDNLL", "RE"
+    args.model, args.arch, args.SC_Type, args.vocab_size = "Transformer_conv", "VDNLL", "RE", 73000
     args.data_idx, args.weak_twice = False, False
     args.is_symmetric = True
-    args.mislabel_rate = 0.01
+    args.mislabel_rate = 0.3
     args.is_balanced = False
 
     # 开始打印日志信息

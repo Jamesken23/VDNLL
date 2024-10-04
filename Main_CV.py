@@ -116,10 +116,10 @@ def create_loader(args, log_set, is_symmetric=False):
 
 if __name__ == '__main__':
 
-    args.model, args.arch, args.SC_Type = "LSTM", "Co_Learning", "RE"
+    args.model, args.arch, args.SC_Type, args.vocab_size = "Transformer_conv", "VDNLL", "RE", 73000
     args.data_idx, args.weak_twice = False, False
     args.is_symmetric = True
-    # args.is_balanced = False
+    args.mislabel_rate = 0.3
 
     # 开始打印日志信息
     log_path, log_name = get_log_path(args)
