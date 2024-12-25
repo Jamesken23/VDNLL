@@ -12,16 +12,16 @@ def get_data_path_vocab(sc_type):
         valid_data_path = "Datasets/RE/valid_data.json"
         test_data_path = "Datasets/RE/test_data.json"
         vocab2id_path = "Datasets/RE/RE_vocab_id.pkl"
-    elif sc_type == "TD":
-        train_data_path = "Datasets/TD/training_data.json"
-        valid_data_path = "Datasets/TD/valid_data.json"
-        test_data_path = "Datasets/TD/test_data.json"
-        vocab2id_path = "Datasets/TD/TD_vocab_id.pkl"
-    elif sc_type == "IOU":
-        train_data_path = "Datasets/IOU/training_data.json"
-        valid_data_path = "Datasets/IOU/valid_data.json"
-        test_data_path = "Datasets/IOU/test_data.json"
-        vocab2id_path = "Datasets/IOU/IOU_vocab_id.pkl"
+    elif sc_type == "TOD":
+        train_data_path = "Datasets/TOD/training_data.json"
+        valid_data_path = "Datasets/TOD/valid_data.json"
+        test_data_path = "Datasets/TOD/test_data.json"
+        vocab2id_path = "Datasets/TOD/TOD_vocab_id.pkl"
+    elif sc_type == "LE":
+        train_data_path = "Datasets/LE/training_data.json"
+        valid_data_path = "Datasets/LE/valid_data.json"
+        test_data_path = "Datasets/LE/test_data.json"
+        vocab2id_path = "Datasets/LE/LE_vocab_id.pkl"
     elif sc_type == "SU":
         train_data_path = "Datasets/SU/training_data.json"
         valid_data_path = "Datasets/SU/valid_data.json"
@@ -132,10 +132,3 @@ def get_training_data_with_noisy_labels(train_data, train_label, is_symmetric=Fa
             train_label_clean.append(train_label[j])
 
     return np.array(train_data_clean), np.array(train_data_noise), np.array(train_label_clean), np.array(train_label_noise)
-
-
-if __name__ == "__main__":
-    SC_Type, max_setence_length = "RE", 2000
-    load_train_valid_test_data(SC_Type, max_setence_length)
-
-
