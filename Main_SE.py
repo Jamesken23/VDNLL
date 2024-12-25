@@ -59,12 +59,8 @@ def create_model(args):
         filter_size = [2, 3, 4]  # 卷积核的长，取了三种
         model = textcnn.TextCNN(vocab_size=vocab_size, embedding_dim=embedding_dim, num_filter=num_filter, filter_sizes=filter_size)
     elif model_name == "Self_Att":
-        args.batch_size = 8
-        args.max_setence_length = 1000
         model = self_attention.SelfAttention(vocab_size=vocab_size, embedding_dim=embedding_dim)
     elif model_name == "Transformer":
-        args.batch_size = 4
-        args.max_setence_length = 500
         model = transformer.Transformer(vocab_size, args.max_setence_length, device)
     elif model_name == "Transformer_conv":
         model = transformer_conv.Transformer_Conv(vocab_size, max_setence_length, embed_dim=embedding_dim, device=device)
@@ -126,8 +122,7 @@ def create_loader(args, log_set, is_symmetric=False):
 
 
 if __name__ == '__main__':
-    # RE vocab -> 72800; TD vocab -> 37369/65908; IOU vocab -> 45475; SU -> 56534
-    args.model, args.arch, args.SC_Type, args.vocab_size = "Transformer_conv", "VDNLL", "RE", 73000
+    args.model, args.arch, args.SC_Type = "Transformer_conv", "VDNLL", "RE"
     args.data_idx, args.weak_twice = False, False
     args.is_symmetric = True
     args.mislabel_rate = 0.3
