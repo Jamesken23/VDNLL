@@ -140,7 +140,7 @@ class Trainer:
         return acc, recall, precision, F1
 
     # 主函数
-    def loop(self, epochs, label_data, unlab_data, val_data, test_data):
+    def loop(self, epochs, label_data, unlab_data, test_data):
         self.epoch_pslab = self.create_pslab(n_samples=len(unlab_data.dataset), n_classes=self.num_classes)
         
         best_acc, best_epoch = 0., 0
@@ -149,7 +149,7 @@ class Trainer:
             self.log_set.info("---------------------------- Epochs: {} ----------------------------".format(ep))
             self.train(label_data, unlab_data)
             
-            val_acc = self.validate(val_data)
+            val_acc = self.validate(test_data)
             if val_acc > best_acc:
                 best_acc = val_acc
                 best_epoch = ep

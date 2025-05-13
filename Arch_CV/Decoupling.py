@@ -147,7 +147,7 @@ class Trainer:
         return acc, recall, precision, F1
 
     # 主函数
-    def loop(self, epochs, train_c_data, train_n_data, val_data, test_data):
+    def loop(self, epochs, train_c_data, train_n_data, test_data):
 
         best_acc, best_epoch = 0., 0
         for ep in range(epochs):
@@ -155,7 +155,7 @@ class Trainer:
             self.log_set.info("---------------------------- Epochs: {} ----------------------------".format(ep))
             self.train(train_c_data, train_n_data, )
 
-            val_acc = self.validate(val_data)
+            val_acc = self.validate(test_data)
             if val_acc > best_acc:
                 best_acc = val_acc
                 best_epoch = ep
