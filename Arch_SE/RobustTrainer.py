@@ -2,7 +2,6 @@
 RobustTrainer算法
 Ref: https://github.com/RobustTrainer/RobustTrainer/blob/main/feature_learning.py
 """
-
 import torch, copy
 import torch.nn as nn
 import torch.nn.functional as F
@@ -37,7 +36,7 @@ class Trainer:
             lbs = inputs.size(0)
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
-            _, _, outputs = self.model(inputs)
+            _, outputs = self.model(inputs)
             loss = self.CE(outputs, targets)
 
             self.optimizer.zero_grad()
@@ -63,7 +62,7 @@ class Trainer:
             lbs = inputs.size(0)
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
-            features, intermediate_feat, outputs = self.model(inputs)
+            features, outputs = self.model(inputs)
             # obtain the class probabilities of prototypes
             class_prototypes = copy.deepcopy(self.prototypes)
             class_prototypes = torch.from_numpy(class_prototypes).float().to(self.device)
@@ -115,7 +114,7 @@ class Trainer:
                 input = train_x[i*self.batch_size: min((i+1)*self.batch_size, len(train_x))]
                 input = torch.LongTensor(input).to(self.device)
 
-                feat, _, _ = self.model(input)
+                feat, _ = self.model(input)
                 if torch.cuda.is_available():
                     feature.extend(feat.data.cpu().tolist())
                 else:
@@ -129,7 +128,7 @@ class Trainer:
             data, targets = data.to(self.device), targets.to(self.device)
 
             # === forward ===
-            _, _, logits1 = self.model(data)
+            _, logits1 = self.model(data)
 
             test_acc_1 = targets.eq(logits1.max(1)[1]).float().sum().item()
             acc_1 += test_acc_1 / data.size(0)
@@ -153,7 +152,7 @@ class Trainer:
             data, targets = data.to(self.device), targets.to(self.device)
 
             # === forward ===
-            _, _, logits = model(data)
+            _, logits = model(data)
 
             if torch.cuda.is_available():
                 y_label = targets.cpu().detach().numpy().tolist()
@@ -174,7 +173,7 @@ class Trainer:
         return acc, recall, precision, F1
 
     # 主函数
-    def loop(self, epochs, train_data, train_loader, val_data, test_data):
+    def loop(self, epochs, train_data, train_loader, test_data):
         X_train, Y_train = train_data
         nb_prototypes = int((len(X_train)/2) ** 0.5)
 
@@ -211,7 +210,13 @@ class Trainer:
 
                 self.run_train(data_loader_train, nb_prototypes, is_warmup=False)
 
-            val_acc = self.validate(val_data)
+#             val_acc = self.validate(val_data)
+            val_acc, recall, precision, F1 = self.predict(self.model, test_data)
+            self.log_set.info(
+                "Epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(ep, val_acc,
+                                                                                                                recall,
+                                                                                                                precision,
+                                                                                                                F1))
             if val_acc > best_acc:
                 best_acc = val_acc
                 best_epoch = ep
