@@ -5,24 +5,24 @@ def create_parser():
     parser = argparse.ArgumentParser(description='-----VDNLL --PyTorch ')
     
     # Architecture
-    parser.add_argument('--arch', default="Co_Teaching", choices=["PL", "Co_Teaching", "Co_Teaching_plus", "Decoupling"])
-    parser.add_argument('--feature_model', default="Transformer", choices=["LSTM", "Transformer"])
+    parser.add_argument('--arch', default="PL", choices=["PL", "Co_Teaching", "Co_Teaching_plus", "Decoupling"])
+    parser.add_argument('--feature_model', default="TextCNN", choices=["LSTM", "Transformer"])
     parser.add_argument('--embedding_dim', default=256, type=int)
-    parser.add_argument('--vocab_size', default=50000, type=int)
+    parser.add_argument('--vocab_size', default=10000, type=int)
     
     # loader
     parser.add_argument('--is_balanced', default=True)
     
     # Data
-    parser.add_argument('--SC_Type', default="RE", choices=["RE", "TOD", "LE", "SU"])
+    parser.add_argument('--SC_Type', default="RE", choices=["RE", "TD", "IOU", "SU"])
     parser.add_argument('--num_classes', type=int, default="2", help='number of class')
     parser.add_argument('--max_setence_length', type=int, default="2000", help='Max length of a setence')
     parser.add_argument('--training_data_ratio', default=0.80, type=float)
     parser.add_argument('--valid_data_ratio', default=0.10, type=float)
     parser.add_argument('--test_data_ratio', default=0.10, type=float)
     
-    parser.add_argument('--batch_size', default=8, type=int, help='batch size (default: 8)')
-    parser.add_argument('--mislabel_rate', default=0.30, type=float)
+    parser.add_argument('--batch_size', default=32, type=int, help='batch size (default: 32)')
+    parser.add_argument('--mislabel_rate', default=0.20, type=float)
     parser.add_argument('--forget_rate', default=0.20, type=float)
     
     # Optimization
