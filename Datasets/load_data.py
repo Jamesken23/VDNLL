@@ -9,25 +9,21 @@ import numpy as np
 def get_data_path_vocab(sc_type):
     if sc_type == "RE":
         train_data_path = "Datasets/RE/training_data.json"
-        valid_data_path = "Datasets/RE/valid_data.json"
         test_data_path = "Datasets/RE/test_data.json"
         vocab2id_path = "Datasets/RE/RE_vocab_id.pkl"
-    elif sc_type == "TOD":
-        train_data_path = "Datasets/TOD/training_data.json"
-        valid_data_path = "Datasets/TOD/valid_data.json"
-        test_data_path = "Datasets/TOD/test_data.json"
-        vocab2id_path = "Datasets/TOD/TOD_vocab_id.pkl"
-    elif sc_type == "LE":
-        train_data_path = "Datasets/LE/training_data.json"
-        valid_data_path = "Datasets/LE/valid_data.json"
-        test_data_path = "Datasets/LE/test_data.json"
-        vocab2id_path = "Datasets/LE/LE_vocab_id.pkl"
+    elif sc_type == "TD":
+        train_data_path = "Datasets/TD/training_data.json"
+        test_data_path = "Datasets/TD/test_data.json"
+        vocab2id_path = "Datasets/TD/TD_vocab_id.pkl"
+    elif sc_type == "IOU":
+        train_data_path = "Datasets/IOU/training_data.json"
+        test_data_path = "Datasets/IOU/test_data.json"
+        vocab2id_path = "Datasets/IOU/IOU_vocab_id.pkl"
     elif sc_type == "SU":
         train_data_path = "Datasets/SU/training_data.json"
-        valid_data_path = "Datasets/SU/valid_data.json"
         test_data_path = "Datasets/SU/test_data.json"
         vocab2id_path = "Datasets/SU/SU_vocab_id.pkl"
-    return train_data_path, valid_data_path, test_data_path, vocab2id_path
+    return train_data_path, test_data_path, vocab2id_path
 
 
 
@@ -47,23 +43,18 @@ def get_SC_data(sc_json_path, max_setence_length):
         one_sol_json = json.loads(i)
 
         sol_content = one_sol_json["sol content"].split(" ")
-        # 计算sol_content的长度，判断是否需要进行截断
-        if len(sol_content) < max_setence_length:
-            sol_content.extend(["PAD"]*(max_setence_length-len(sol_content)))
-        else:
-            sol_content = sol_content[:max_setence_length]
 
         sc_data.append(sol_content)
         sc_label.append(one_sol_json["label"])
 
     # print("The length of train data is {0}, and max_setence_length is {1}".format(len(op_data), max_setence_length))
-    return np.array(sc_data), np.array(sc_label)
+    return sc_data, np.array(sc_label)
 
 
 # 加载本地训练数据
 def load_train_valid_test_data(SC_Type, max_setence_length):
 
-    train_data_path, valid_data_path, test_data_path, vocab2id_path = get_data_path_vocab(SC_Type)
+    train_data_path, test_data_path, vocab2id_path = get_data_path_vocab(SC_Type)
 
     # 加载词汇表
     with open(vocab2id_path, 'rb') as f:
@@ -75,23 +66,16 @@ def load_train_valid_test_data(SC_Type, max_setence_length):
     for i in temp_data:
         temp = []
         for j in i:
+            if '0x' in j or '1' in j or '2' in j or '3' in j or '4' in j or '5' in j or '6' in j or '7' in j or '8' in j or '9' in j:
+                j = 'number'
             if j in vocab2id:
                 temp.append(vocab2id[j])
-            else:
-                temp.append(vocab2id["PAD"])
+        if len(temp) < max_setence_length:
+            temp.extend([vocab2id["PAD"]] * (max_setence_length - len(temp)))
+        else:
+            temp = temp[:max_setence_length]
         train_data.append(temp)
 
-    # 加载验证数据，并且ont-hot向量化，对应word2vec词嵌入
-    temp_data, valid_label = get_SC_data(valid_data_path, max_setence_length)
-    valid_data = []
-    for i in temp_data:
-        temp = []
-        for j in i:
-            if j in vocab2id:
-                temp.append(vocab2id[j])
-            else:
-                temp.append(vocab2id["PAD"])
-        valid_data.append(temp)
 
     # 加载测试数据，并且ont-hot向量化，对应word2vec词嵌入
     temp_data, test_label = get_SC_data(test_data_path, max_setence_length)
@@ -99,13 +83,17 @@ def load_train_valid_test_data(SC_Type, max_setence_length):
     for i in temp_data:
         temp = []
         for j in i:
+            if '0x' in j or '1' in j or '2' in j or '3' in j or '4' in j or '5' in j or '6' in j or '7' in j or '8' in j or '9' in j:
+                j = 'number'
             if j in vocab2id:
                 temp.append(vocab2id[j])
-            else:
-                temp.append(vocab2id["PAD"])
+        if len(temp) < max_setence_length:
+            temp.extend([vocab2id["PAD"]] * (max_setence_length - len(temp)))
+        else:
+            temp = temp[:max_setence_length]
         test_data.append(temp)
 
-    return np.array(train_data), train_label, np.array(valid_data), valid_label, np.array(test_data), test_label
+    return np.array(train_data), train_label, np.array(test_data), test_label
 
 
 # 对训练集数据的标签进行加噪
@@ -132,3 +120,10 @@ def get_training_data_with_noisy_labels(train_data, train_label, is_symmetric=Fa
             train_label_clean.append(train_label[j])
 
     return np.array(train_data_clean), np.array(train_data_noise), np.array(train_label_clean), np.array(train_label_noise)
+
+
+if __name__ == "__main__":
+    SC_Type, max_setence_length = "RE", 2000
+    load_train_valid_test_data(SC_Type, max_setence_length)
+
+

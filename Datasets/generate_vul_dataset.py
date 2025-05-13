@@ -42,8 +42,7 @@ def load_vul_dataset(original_vul_sol_path, new_vul_sol_path):
 
 
 # 将所有数据拆分成训练集、验证集、测试集
-def split_all_sol(new_vul_sol_path, train_path, valid_path, test_path, training_data_ratio, valid_data_ratio,
-                  num_classes=2):
+def split_all_sol(new_vul_sol_path, train_path, test_path, training_data_ratio, num_classes=2):
     # 读取源文件中的合约数据
     with open(new_vul_sol_path, 'r', encoding='utf-8') as f:
         all_lines = f.readlines()
@@ -61,8 +60,7 @@ def split_all_sol(new_vul_sol_path, train_path, valid_path, test_path, training_
         np.random.shuffle(indices)
 
         training_num = int(len(indices) * training_data_ratio)
-        valid_num = int(len(indices) * (training_data_ratio + valid_data_ratio))
-        training_idx, valid_idx, test_idx = indices[:training_num], indices[training_num: valid_num], indices[valid_num:]
+        training_idx, test_idx = indices[:training_num], indices[training_num:]
 
         # 读写训练集
         for j in training_idx:
@@ -76,17 +74,6 @@ def split_all_sol(new_vul_sol_path, train_path, valid_path, test_path, training_
                 json.dump(one_sol_dict, ff)
                 ff.write('\n')
 
-        # 读写验证集
-        for j in valid_idx:
-            one_sol_dict = {}
-            one_sol_dict["sol name"] = all_sol_name[j]
-            one_sol_dict["label"] = all_labels[j]
-            one_sol_dict["sol content"] = all_data[j]
-
-            #  保存数据,每个合约数据以换行结束
-            with open(valid_path, 'a') as ff:
-                json.dump(one_sol_dict, ff)
-                ff.write('\n')
 
         # 读写测试集
         for j in test_idx:
@@ -101,16 +88,13 @@ def split_all_sol(new_vul_sol_path, train_path, valid_path, test_path, training_
                 ff.write('\n')
 
 
-
 if __name__ == "__main__":
-    original_vul_sol_path = r"original_sol/DE_414_0_278_1_136"
-    new_vul_sol_path = r"DE/all_sol.json"
+    original_vul_sol_path = r"Original_Sol/SU(1147_0_956_1_191)"
+    new_vul_sol_path = r"SU/all_sol.json"
     load_vul_dataset(original_vul_sol_path, new_vul_sol_path)
 
-    # 训练集、验证机、测试集的比例分别为8：1：1
-    training_data_ratio, valid_data_ratio, test_data_ratio = 0.8, 0.1, 0.1
-    train_path = r"DE/training_data.json"
-    valid_path = r"DE/valid_data.json"
-    test_path = r"DE/test_data.json"
-    split_all_sol(new_vul_sol_path, train_path, valid_path, test_path, training_data_ratio, valid_data_ratio,
-                  num_classes=2)
+    # 训练集、验证机、测试集的比例分别为8：2
+    training_data_ratio, test_data_ratio = 0.8, 0.2
+    train_path = r"SU/training_data.json"
+    test_path = r"SU/test_data.json"
+    split_all_sol(new_vul_sol_path, train_path, test_path, training_data_ratio, num_classes=2)
