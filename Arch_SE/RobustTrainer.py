@@ -2,7 +2,7 @@
 RobustTrainer算法
 Ref: https://github.com/RobustTrainer/RobustTrainer/blob/main/feature_learning.py
 """
-import torch, copy
+import torch, copy, time
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as Data
@@ -177,11 +177,12 @@ class Trainer:
         X_train, Y_train = train_data
         nb_prototypes = int((len(X_train)/2) ** 0.5)
 
-        best_acc, best_epoch = 0., 0
+        best_acc, best_epoch, all_time = 0., 0, 0.
         for ep in range(epochs):
             self.ep = ep
             self.log_set.info("---------------------------- Epochs: {} ----------------------------".format(ep))
-
+            # 开始训练
+            start_time = time.time()
             if ep < self.nb_warmup:
                 # warmup
                 self.run_train(train_loader, nb_prototypes, is_warmup=True)
@@ -211,12 +212,14 @@ class Trainer:
                 self.run_train(data_loader_train, nb_prototypes, is_warmup=False)
 
 #             val_acc = self.validate(val_data)
+            end_time = time.time()
+            all_time += end_time-start_time
             val_acc, recall, precision, F1 = self.predict(self.model, test_data)
             self.log_set.info(
-                "Epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(ep, val_acc,
+                "Epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}, epoch_time: {5}".format(ep, val_acc,
                                                                                                                 recall,
                                                                                                                 precision,
-                                                                                                                F1))
+                                                                                                                F1, end_time-start_time))
             if val_acc > best_acc:
                 best_acc = val_acc
                 best_epoch = ep
@@ -224,11 +227,11 @@ class Trainer:
 
         acc, recall, precision, F1 = self.predict(self.model, test_data)
         self.log_set.info(
-            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(epochs,
+            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}, ave_time: {5}".format(epochs,
                                                                                                             acc,
                                                                                                             recall,
                                                                                                             precision,
-                                                                                                            F1))
+                                                                                                            F1, all_time/epochs))
         acc, recall, precision, F1 = self.predict(self.best_model, test_data)
         self.log_set.info(
             "The best epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(
