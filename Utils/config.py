@@ -27,7 +27,7 @@ def create_parser():
     
     # Optimization
     parser.add_argument('--dropout', default=0.5, type=float, help='ratio of dropout (default: 0)')
-    parser.add_argument('--epochs', type=int, default="100", help='number of total training epochs')
+    parser.add_argument('--epochs', type=int, default="50", help='number of total training epochs')
     parser.add_argument('--optim', default="adamw", type=str, metavar='TYPE', choices=['sgd', 'adam', 'adamw'])
     parser.add_argument('--learning_rate', default=0.001, type=float, help='learning rate')
 
