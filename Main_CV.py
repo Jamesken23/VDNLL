@@ -110,7 +110,7 @@ def create_loader(args, log_set, is_symmetric=False):
 
 if __name__ == '__main__':
 
-    args.model, args.arch, args.SC_Type = "Transformer_conv", "VDNLL", "RE"
+    args.model, args.arch, args.SC_Type = "Transformer_conv", "Co_Learning", "RE"
     args.data_idx, args.weak_twice = False, False
     args.is_symmetric = True
     args.mislabel_rate = 0.3

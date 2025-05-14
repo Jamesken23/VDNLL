@@ -53,6 +53,8 @@ def create_model(args):
     elif model_name == "BiLSTM":
         model = bilstm.BiLSTM(vocab_size=vocab_size, embedding_dim=embedding_dim)
     elif model_name == "BiLSTM_Att":
+        args.batch_size = 8
+        args.max_setence_length = 1000
         model = bilstm_att.BiLSTM_Attention(vocab_size=vocab_size, embedding_dim=embedding_dim, device=device)
     elif model_name == "TextCNN":
         num_filter = 100  # 卷积核个数
@@ -122,7 +124,7 @@ def create_loader(args, log_set, is_symmetric=False):
 
 
 if __name__ == '__main__':
-    args.model, args.arch, args.SC_Type = "Transformer_conv", "VDNLL", "RE"
+    args.model, args.arch, args.SC_Type = "Transformer_conv", "RobustTrainer", "SU"
     args.is_symmetric, args.data_idx = True, False
     args.mislabel_rate = 0.3
     args.is_balanced = False
