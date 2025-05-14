@@ -2,7 +2,7 @@
 Decoupling算法
 Ref: https://github.com/chengtan9907/Co-learning/blob/master/algorithms/Decoupling.py
 """
-import torch
+import torch, time
 import numpy as np
 
 from copy import deepcopy
@@ -51,8 +51,8 @@ class Trainer:
             c_n_x, c_n_y = c_n_x.to(self.device), c_n_y.to(self.device)
 
             # === forward ===
-            _, _, logits1 = self.model1(c_n_x)
-            _, _, logits2 = self.model2(c_n_x)
+            _, logits1 = self.model1(c_n_x)
+            _, logits2 = self.model2(c_n_x)
 
             _, _, pred1 = torch.max(logits1, dim=1)
             _, _, pred2 = torch.max(logits2, dim=1)
@@ -96,8 +96,8 @@ class Trainer:
             data, targets = data.to(self.device), targets.to(self.device)
 
             # === forward ===
-            _, _, logits1 = self.model1(data)
-            _, _, logits2 = self.model2(data)
+            _, logits1 = self.model1(data)
+            _, logits2 = self.model2(data)
 
             test_acc_1 = targets.eq(logits1.max(1)[1]).float().sum().item()
             acc_1 += test_acc_1 / data.size(0)
@@ -125,7 +125,7 @@ class Trainer:
             data, targets = data.to(self.device), targets.to(self.device)
 
             # === forward ===
-            _, _, logits = model(data)
+            _, logits = model(data)
 
             if torch.cuda.is_available():
                 y_label = targets.cpu().detach().numpy().tolist()
@@ -149,11 +149,15 @@ class Trainer:
     # 主函数
     def loop(self, epochs, train_c_data, train_n_data, test_data):
 
-        best_acc, best_epoch = 0., 0
+        best_acc, best_epoch, all_time = 0., 0, 0.
         for ep in range(epochs):
             self.ep = ep
             self.log_set.info("---------------------------- Epochs: {} ----------------------------".format(ep))
-            self.train(train_c_data, train_n_data, )
+            # 开始训练
+            start_time = time.time()
+            self.train(train_c_data, train_n_data,)
+            end_time = time.time()
+            all_time += end_time-start_time
 
             val_acc = self.validate(test_data)
             if val_acc > best_acc:
@@ -163,11 +167,11 @@ class Trainer:
 
         acc, recall, precision, F1 = self.predict(self.model1, test_data)
         self.log_set.info(
-            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(epochs,
+            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}, ave_time: {5}".format(epochs,
                                                                                                             acc,
                                                                                                             recall,
                                                                                                             precision,
-                                                                                                            F1))
+                                                                                                            F1, all_time/epochs))
         acc, recall, precision, F1 = self.predict(self.best_model, test_data)
         self.log_set.info(
             "The best epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(

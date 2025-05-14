@@ -3,7 +3,7 @@ Co-Learning算法
 Ref: https://github.com/chengtan9907/Co-learning/blob/master/algorithms/Colearning.py
 """
 
-import torch
+import torch, time
 import torch.nn.functional as F
 from torch.distributions.beta import Beta
 
@@ -171,12 +171,17 @@ class Trainer:
     # 主函数
     def loop(self, epochs, train_c_data, test_data):
 
-        best_acc, best_epoch = 0., 0
+        best_acc, best_epoch, all_time = 0., 0, 0.
         for ep in range(epochs):
             self.ep = ep
             self.log_set.info("---------------------------- Epochs: {} ----------------------------".format(ep))
+            # 开始训练
+            start_time = time.time()
             self.train(train_c_data)
-
+            end_time = time.time()
+            all_time += end_time-start_time
+            self.log_set.info("Epoch {0}, time: {1}".format(ep, end_time-start_time))
+            
             val_acc = self.validate(test_data)
             if val_acc > best_acc:
                 best_acc = val_acc
@@ -185,11 +190,11 @@ class Trainer:
 
         acc, recall, precision, F1 = self.predict(self.model_scratch, test_data)
         self.log_set.info(
-            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(epochs,
+            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}, ave_time: {5}".format(epochs,
                                                                                                             acc,
                                                                                                             recall,
                                                                                                             precision,
-                                                                                                            F1))
+                                                                                                            F1, all_time/epochs))
         acc, recall, precision, F1 = self.predict(self.best_model, test_data)
         self.log_set.info(
             "The best epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(
