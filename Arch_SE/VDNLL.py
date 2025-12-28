@@ -1,12 +1,11 @@
 """
-VDNLL算法：Noisy Label Learning for Smart Contract Vulnerability Detection
+VDNLL：Robust Smart Contract Vulnerability Detection by Learning From Noisy Labels
 """
-
-import torch, json, os, time
+import torch, json, os
 import torch.nn as nn
 import torch.utils.data as Data
 import numpy as np
-from Arch_SE.vdnll_tool import select_clean_samples
+from Arch_SE.vdnll_tool import select_clean_samples, gen_r_vadv, mse_with_softmax
 from copy import deepcopy
 from sklearn.metrics import confusion_matrix
 
@@ -22,9 +21,10 @@ class Trainer:
         self.mislabel_rate = int(mislabel_rate * 100)
 
         self.log_set = log_set
-        self.log_set.info('--------------------VDNLL-------------------')
+        self.log_set.info('--------------------Improved VDNLL-------------------')
 
         self.CE = nn.CrossEntropyLoss().to(self.device)
+        self.cons_loss = mse_with_softmax
         self.optimizer = torch.optim.AdamW(list(self.model_1.parameters()) + list(self.model_2.parameters()), lr=self.lr)
 
 
@@ -50,18 +50,32 @@ class Trainer:
 
     def train_iteration(self, data_loader):
         label_acc, all_loss = 0., 0.
+        acc_1, acc_2 = 0, 0
         num_step = 0
-
+        label_idx_1, label_idx_2 = [], []
         for inputs, targets in data_loader:
             num_step += 1
-            lbs = inputs.size(0)
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
-            _, output_1 = self.model_1(inputs)
+            emd_1, output_1 = self.model_1(inputs)
             loss_1 = self.CE(output_1, targets)
+            # 添加对抗损失
+            with torch.no_grad():
+                vlogits_1 = output_1.clone().detach()
+                r_vadv_1  = gen_r_vadv(emd_1)
+                _, rlogits_1 = self.model_1(inputs, r_vadv_1)
+                adv_loss_1  = self.cons_loss(rlogits_1, vlogits_1)
+            loss_1 += adv_loss_1
 
-            _, output_2 = self.model_2(inputs)
+            emd_2, output_2 = self.model_2(inputs)
             loss_2 = self.CE(output_2, targets)
+            # 添加对抗损失
+            with torch.no_grad():
+                vlogits_2 = output_2.clone().detach()
+                r_vadv_2 = gen_r_vadv(emd_2)
+                _, rlogits_2 = self.model_2(inputs, r_vadv_2)
+                adv_loss_2 = self.cons_loss(rlogits_2, vlogits_2)
+            loss_2 += adv_loss_2
 
             self.optimizer.zero_grad()
             loss_1.backward()
@@ -69,18 +83,27 @@ class Trainer:
             self.optimizer.step()
 
             ##=== log info ===
-            temp_acc = targets.eq(output_1.max(1)[1]).float().sum().item()
-            label_acc += temp_acc / lbs
-
+            idx_list1 = targets.eq(output_1.max(1)[1]).cpu().tolist()
+            idx_list2 = targets.eq(output_2.max(1)[1]).cpu().tolist()
+            label_idx_1.extend(idx_list1)
+            label_idx_2.extend(idx_list2)
+            temp_acc_1 = targets.eq(output_1.max(1)[1]).float().sum().item()
+            temp_acc_2 = targets.eq(output_2.max(1)[1]).float().sum().item()
+            acc_1 += temp_acc_1
+            acc_2 += temp_acc_2
             all_loss += loss_1.item() + loss_2.item()
 
-        self.log_set.info(">>>>>[train] label data's accuracy is {0}, and all training loss is {1}".format(
-            label_acc / float(num_step), all_loss / float(num_step)))
+        # 求交集
+        intersection = [a and b for a, b in zip(label_idx_1, label_idx_2)]
+        # 求并集
+        union = [a or b for a, b in zip(label_idx_1, label_idx_2)]
+
+        self.log_set.info(">>>>>[train] all training loss is {0}, temp_acc_1 is {1}, temp_acc_2 is {2}, intersection is {3}, "
+                          "union is {4}".format(all_loss / float(num_step), acc_1, acc_2, sum(intersection), sum(union)))
 
 
     def run_train(self, train_data, data_loader, ep):
         # the standard training: only the CE loss is use
-
         X_train, Y_train = train_data
 
         with torch.enable_grad():
@@ -148,15 +171,14 @@ class Trainer:
     
     def predict(self, model, data_loader):
         model.eval()
-        idx_list = []
+
         feature_list, pred_list, y_list = [], [], []
         for data, targets in data_loader:
             data, targets = data.to(self.device), targets.to(self.device)
 
             # === forward ===
             feature, logits = model(data)
-            idx_list2 = targets.eq(logits.max(1)[1]).cpu().tolist()
-            idx_list.extend(idx_list2)
+
             if torch.cuda.is_available():
                 y_label = targets.cpu().detach().numpy().tolist()
                 pred = logits.cpu().detach().numpy().tolist()
@@ -170,7 +192,7 @@ class Trainer:
             y_list.extend(y_label)
             feature_list.extend(fea)
 
-        print("pred_list shape is {0}, and y_list shape is {1}".format(np.array(pred_list).shape, np.array(y_list).shape))
+        # print("pred_list shape is {0}, and y_list shape is {1}".format(np.array(pred_list).shape, np.array(y_list).shape))
         tn, fp, fn, tp = confusion_matrix(y_list, np.argmax(pred_list, axis=1)).ravel()
         acc = (tp + tn) / (tp + tn + fp + fn)
 
@@ -178,54 +200,37 @@ class Trainer:
         F1 = (2 * precision * recall) / (precision + recall + 0.000001)
 
         pred_numpy = np.argmax(pred_list, axis=1).tolist()
-        return acc, recall, precision, F1, feature_list, pred_numpy, y_list, idx_list
+        return acc, recall, precision, F1, feature_list, pred_numpy, y_list
 
     # 主函数
     def loop(self, epochs, train_data, train_loader, test_data):
 
-        best_acc, best_epoch, all_time = 0., 0, 0.
+        best_acc, best_epoch = 0., 0
         for ep in range(epochs):
             self.log_set.info("---------------------------- Epochs: {} ----------------------------".format(ep))
-            # 开始训练
-            start_time = time.time()
+
             self.run_train(train_data, train_loader, ep)
 #             val_acc = self.validate(val_data)
-            end_time = time.time()
-            all_time += end_time-start_time
-            val_acc, recall, precision, F1, feature_numpy, pred_numpy, label_numpy, idx_list = self.predict(self.model_1, test_data)
+            val_acc, recall, precision, F1, feature_numpy, pred_numpy, label_numpy = self.predict(self.model_1, test_data)
             self.log_set.info(
-                "Model_1 epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}, acc_num: {5}, epoch_time: {6}".format(ep, val_acc,
+                "Epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(ep, val_acc,
                                                                                                                 recall,
                                                                                                                 precision,
-                                                                                                                F1, sum(idx_list), end_time-start_time))
-            val_acc_2, recall_2, precision_2, F1_2, feature_numpy_2, pred_numpy_2, label_numpy_2, idx_list_2 = self.predict(self.model_2,
-                                                                                                  test_data)
-            self.log_set.info(
-                "Model_2 epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}, acc_num: {5}, epoch_time: {6}".format(ep,
-                                                                                                                  val_acc_2, recall_2, precision_2, F1_2, sum(idx_list_2), end_time-start_time))
-            # 求交集
-            intersection = [a and b for a, b in zip(idx_list, idx_list_2)]
-
-            # 求并集
-            union = [a or b for a, b in zip(idx_list, idx_list_2)]
-
-            self.log_set.info(
-                "intersection is: {0}, union: {1}".format(sum(intersection), sum(union)))
-
+                                                                                                                F1))
             self.save_features(feature_numpy, pred_numpy, label_numpy, ep)
             if val_acc > best_acc:
                 best_acc = val_acc
                 best_epoch = ep
                 self.best_model = deepcopy(self.model_1).to(self.device)
 
-        acc, recall, precision, F1, _, _, _, _ = self.predict(self.model_1, test_data)
+        acc, recall, precision, F1, _, _, _ = self.predict(self.model_1, test_data)
         self.log_set.info(
-            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}, ave_time: {5}".format(epochs,
+            "Final epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(epochs,
                                                                                                             acc,
                                                                                                             recall,
                                                                                                             precision,
-                                                                                                            F1, all_time/epochs))
-        acc, recall, precision, F1, _, _, _, _ = self.predict(self.best_model, test_data)
+                                                                                                            F1))
+        acc, recall, precision, F1, _, _, _ = self.predict(self.best_model, test_data)
         self.log_set.info(
             "The best epoch {0}, we get Accuracy: {1}, Recall(TPR): {2}, Precision: {3}, F1 score: {4}".format(
                 best_epoch, acc, recall, precision, F1))

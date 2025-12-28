@@ -10,19 +10,30 @@ def cal_cosine_similarity(x,y):
     denom = np.linalg.norm(x) * np.linalg.norm(y)
     return num / denom
 
-
+# 定义一致性损失
+def mse_with_softmax(logit1, logit2):
+    assert logit1.size()==logit2.size()
+    return F.mse_loss(F.softmax(logit1,1), F.softmax(logit2,1))
 
 # 定义softmax函数
 def softmax(x):
     return np.exp(x) / np.sum(np.exp(x))
 
+# 计算输入向量的 L2 范数（在 axis=(1,2) 维度上），然后将输入向量除以该范数，得到单位方向向量
+def gen_r_vadv(x, p_mult=0.2):
+    """
+    :param x: 输入数据的嵌入层向量
+    :param p_mult: 缩放因子，默认是0.2
+    :return:
+    """
+    if torch.cuda.is_available():
+        sample_numpy = x.cpu().detach().numpy()
+    else:
+        sample_numpy = x.detach().numpy()
 
-# 利用numpy计算交叉熵损失，对应pytorch的 F.cross_entropy(y_1, t, reduce=False)
-# def calculate_cross_entropy(x, y):
-#     x_softmax = [softmax(x[i]) for i in range(len(x))]
-#     x_log = [np.log(x[i] * y[i] + 0.001) for i in range(len(y))]
-#     # loss = - np.sum(x_log) / len(y)
-#     return -1 * x_log
+    noise = sample_numpy / (np.sqrt(np.sum(sample_numpy ** 2, axis=(1, 2))).reshape((-1, 1, 1)) + 1e-16)
+    noise = p_mult * noise
+    return torch.from_numpy(noise).to(device)
 
 
 def z_score_normalize(data):
